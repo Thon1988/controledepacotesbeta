@@ -1,5 +1,6 @@
 <!-- LÓGICA JAVASCRIPT SIMULADA -->
-    <script>
+<script>
+        // Função para simular o login
         function handleLogin(event) {
             event.preventDefault(); // Impede o envio padrão do formulário
             
@@ -8,11 +9,14 @@
             const statusMessage = document.getElementById('status-message');
             const loginButton = document.getElementById('login-button');
 
+            // Limpa mensagens anteriores
+            statusMessage.textContent = ''; 
+            statusMessage.className = 'text-center text-sm font-medium h-5';
+            
             // Simula um estado de carregamento
             loginButton.disabled = true;
             loginButton.textContent = 'Acessando...';
-            statusMessage.textContent = ''; 
-            statusMessage.classList.remove('text-red-600');
+            loginButton.classList.add('opacity-70');
 
             console.log(`Tentativa de Login: Usuário=${emailInput}, Senha=${passwordInput}`);
 
@@ -20,22 +24,60 @@
             setTimeout(() => {
                 loginButton.disabled = false;
                 loginButton.textContent = 'Entrar';
+                loginButton.classList.remove('opacity-70');
 
-                // Simulação de autenticação
-                if (emailInput === 'teste@email.com' && passwordInput === '123456') {
-                    statusMessage.textContent = 'Login bem-sucedido! Redirecionando...';
-                    statusMessage.classList.remove('text-red-600');
+                // *** Lógica de Autenticação Simulada ***
+                // O login é efetuado com sucesso se as credenciais forem "teste" / "123"
+                if (emailInput === 'teste' && passwordInput === '123') {
+                    statusMessage.textContent = 'Login bem-sucedido! Acesso liberado para digitalização.';
                     statusMessage.classList.add('text-green-600');
-                    // Aqui seria o código de redirecionamento para o dashboard
-                    console.log("Login OK.");
+                    // Aqui você integraria a lógica real de redirecionamento ou inicialização do app (Firestore/QR Code)
+                    console.log("Login OK. Próximo passo: Inicializar Firebase e Scanner.");
                 } else {
-                    statusMessage.textContent = 'Credenciais inválidas. Tente novamente.';
+                    statusMessage.textContent = 'Credenciais inválidas. Verifique seu usuário/email e senha.';
                     statusMessage.classList.add('text-red-600');
-                    statusMessage.classList.remove('text-green-600');
-                    console.error("Login Falhou.");
+                    console.error("Login Falhou. Credenciais incorretas ou usuário não autorizado.");
                 }
             }, 1500); // 1.5 segundos de simulação
+        }
+
+        // Funções do Modal de Recuperação de Senha
+
+        function showForgotPassword(event) {
+            event.preventDefault();
+            document.getElementById('forgot-password-modal').classList.remove('hidden');
+            document.getElementById('recovery-status').textContent = '';
+        }
+
+        function closeForgotPassword() {
+            document.getElementById('forgot-password-modal').classList.add('hidden');
+        }
+
+        function simulateRecovery() {
+            const recoveryInput = document.getElementById('recovery-input').value.trim();
+            const recoveryStatus = document.getElementById('recovery-status');
+            
+            recoveryStatus.className = 'text-center text-xs font-medium h-4 mt-2';
+            
+            if (recoveryInput.length < 5) {
+                recoveryStatus.textContent = "Por favor, insira um email ou telefone válido.";
+                recoveryStatus.classList.add('text-red-500');
+                return;
+            }
+
+            recoveryStatus.textContent = "Verificando dados...";
+            recoveryStatus.classList.add('text-gray-500');
+
+            setTimeout(() => {
+                // Simulação de envio
+                recoveryStatus.textContent = `Código enviado para ${recoveryInput}! Verifique seu Email ou WhatsApp.`;
+                recoveryStatus.classList.remove('text-gray-500');
+                recoveryStatus.classList.add('text-green-600');
+                document.getElementById('recovery-input').value = '';
+                // Em um app real, o próximo passo seria a tela de inserção do código.
+            }, 2000);
         }
     </script>
 </body>
 </html>
+
