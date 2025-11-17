@@ -1,301 +1,205 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>📦 Scanner 8000 v0.2</title>
+// =========================================================
+// Pegazus Scanner v12 - app.js  (VERSÃO CORRIGIDA + LOGIN OK)
+// =========================================================
 
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+// -----------------------------
+// LOGIN
+// -----------------------------
 
-    <style>
+const VALID_USERS = {
+    "thon": "882010",
+    "manager1": "123"
+};
 
-        /* ---------------------------------------------------------
-           PALETA MODERNA
-        ---------------------------------------------------------- */
-        :root {
-            --primary: #0ea5e9;
-            --primary-dark: #0284c7;
-            --bg: #f5f7fa;
-            --text: #1e293b;
-            --panel-bg: #ffffff;
-            --border: #e2e8f0;
-            --radius: 14px;
-            --shadow: 0 8px 20px rgba(0,0,0,0.08);
-        }
+document.getElementById("loginBtn").addEventListener("click", function () {
 
-        body {
-            margin: 0;
-            font-family: "Inter", system-ui, -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
+    const username = document.getElementById("loginUser").value.trim();
+    const password = document.getElementById("loginPass").value.trim();
+    const status = document.getElementById("loginStatus");
 
-        /* ---------------------------------------------------------
-           LOGIN — CARD MODERNO
-        ---------------------------------------------------------- */
-        #loginScreen {
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+    if (VALID_USERS[username] === password) {
+        status.textContent = "✔ Login realizado com sucesso!";
+        status.style.color = "green";
 
-        #loginForm {
-            background: var(--panel-bg);
-            padding: 40px 30px;
-            border-radius: var(--radius);
-            width: 100%;
-            max-width: 380px;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            text-align: center;
-        }
+        // ativa layout logado
+        document.body.classList.add("logged-in");
 
-        #loginForm h2 {
-            margin: 0 0 10px;
-            font-weight: 600;
-        }
+        // limpa campos
+        document.getElementById("loginUser").value = "";
+        document.getElementById("loginPass").value = "";
 
-        #loginForm input {
-            padding: 14px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 15px;
-            transition: 0.2s;
-        }
-        #loginForm input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25);
-        }
-
-        #loginForm button {
-            padding: 14px;
-            background: var(--primary);
-            border: none;
-            color: white;
-            border-radius: var(--radius);
-            font-size: 16px;
-            cursor: pointer;
-            transition: 0.2s;
-            font-weight: 600;
-        }
-        #loginForm button:hover {
-            background: var(--primary-dark);
-        }
-
-        .login-status-message {
-            font-size: 13px;
-            color: #6b7280;
-            min-height: 16px;
-        }
+    } else {
+        status.textContent = "❌ Usuário ou senha incorretos";
+        status.style.color = "red";
+    }
+});
 
 
-        /* ---------------------------------------------------------
-           APP PRINCIPAL
-        ---------------------------------------------------------- */
-        .app {
-            display: none;
-            padding: 20px;
-            max-width: 960px;
-            margin: auto;
-        }
+// =========================================================
+// SCANNER
+// =========================================================
 
-        h1 {
-            text-align: center;
-            margin-bottom: 15px;
-            font-size: 22px;
-            font-weight: 600;
-        }
+let video = document.getElementById("videoElement");
+let overlay = document.getElementById("overlay");
+let overlayCtx = overlay.getContext("2d");
 
-        /* ---------------------------------------------------------
-           CONTROLS — botões minimalistas
-        ---------------------------------------------------------- */
-        .controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 15px;
-        }
+let scanning = false;
+let currentStream = null;
 
-        button {
-            padding: 10px 14px;
-            background: var(--primary);
-            border: none;
-            color: white;
-            border-radius: var(--radius);
-            cursor: pointer;
-            transition: 0.2s;
-            font-weight: 500;
-        }
+// Ajusta o canvas ao tamanho do vídeo
+function adjustCanvas() {
+    overlay.width = video.videoWidth;
+    overlay.height = video.videoHeight;
+}
 
-        button:hover {
-            background: var(--primary-dark);
-        }
+// Desenha borda verde no QR detectado
+function drawFrame(result) {
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 
-        button.secondary {
-            background: #64748b;
-        }
+    if (!result) return;
 
-        button.secondary:hover {
-            background: #475569;
-        }
+    overlayCtx.strokeStyle = "lime";
+    overlayCtx.lineWidth = 4;
 
-        select, input[type="date"] {
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            background: white;
-        }
+    const tl = result.location.topLeftCorner;
+    const br = result.location.bottomRightCorner;
 
-        /* ---------------------------------------------------------
-           CAMERA — estilo app scanner profissional
-        ---------------------------------------------------------- */
-        .camera-wrap {
-            position: relative;
-            background: black;
-            border-radius: var(--radius);
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            height: 58vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    overlayCtx.strokeRect(
+        tl.x,
+        tl.y,
+        br.x - tl.x,
+        br.y - tl.y
+    );
+}
 
-        video#videoElement {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+// Inicia a câmera
+async function startScanner() {
+    try {
+        const constraints = {
+            audio: false,
+            video: { facingMode: "environment" }
+        };
 
-        canvas#overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = currentStream;
 
-        /* ---------------------------------------------------------
-           PAINEL
-        ---------------------------------------------------------- */
-        .panel {
-            background: var(--panel-bg);
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-        }
+        video.onloadedmetadata = () => {
+            adjustCanvas();
+            video.play();
+            scanning = true;
+            scanLoop();
+        };
 
-        #output {
-            color: #64748b;
-            min-height: 30px;
-            font-size: 14px;
-        }
+    } catch (err) {
+        alert("Erro ao acessar câmera: " + err);
+    }
+}
 
-        .list {
-            max-height: 220px;
-            overflow-y: auto;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-        }
+// Para a câmera
+function stopScanner() {
+    scanning = false;
+    overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 
-        .item {
-            padding: 10px;
-            border-bottom: 1px solid var(--border);
-            color: #334155;
-        }
+    if (currentStream) {
+        currentStream.getTracks().forEach(t => t.stop());
+    }
+}
 
-        /* ---------------------------------------------------------
-           POPUP — notificação moderna
-        ---------------------------------------------------------- */
-        #scanPopup {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--primary);
-            color: white;
-            padding: 12px 20px;
-            border-radius: var(--radius);
-            font-size: 15px;
-            display: none;
-            box-shadow: var(--shadow);
-        }
 
-        /* ---------------------------------------------------------
-           LOGIN ATIVO
-        ---------------------------------------------------------- */
-        body.logged-in .app {
-            display: block;
-        }
+// Loop de detecção
+function scanLoop() {
+    if (!scanning) return;
 
-        body.logged-in #loginScreen {
-            display: none;
-        }
+    overlayCtx.drawImage(video, 0, 0, overlay.width, overlay.height);
+    const imageData = overlayCtx.getImageData(0, 0, overlay.width, overlay.height);
 
-        /* ---------------------------------------------------------
-           RESPONSIVIDADE
-        ---------------------------------------------------------- */
-        @media (max-width: 600px) {
-            .camera-wrap {
-                height: 48vh;
-            }
-            h1 {
-                font-size: 18px;
-            }
-        }
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-    </style>
-</head>
+    if (code) {
+        drawFrame(code);
+        registerScan(code.data);
+        beep();
+    }
 
-<body>
+    requestAnimationFrame(scanLoop);
+}
 
-    <!-- LOGIN -->
-    <div id="loginScreen">
-        <form id="loginForm">
-            <h2>🔑 Acesso do Scanner</h2>
-            <input id="loginUser" type="text" placeholder="Usuário">
-            <input id="loginPass" type="password" placeholder="Senha">
-            <button id="loginBtn">Entrar</button>
-            <p id="loginStatus" class="login-status-message">Digite suas credenciais.</p>
-        </form>
-    </div>
 
-    <!-- APP -->
-    <div class="app">
+// =========================================================
+// REGISTROS
+// =========================================================
 
-        <h1>📦 Scanner 8000 v0.2</h1>
+let scans = JSON.parse(localStorage.getItem("pegazus_scans") || "[]");
+let scansList = document.getElementById("scansList");
 
-        <div class="controls">
-            <button id="startButton" style="display:none">▶ Iniciar</button>
-            <button id="stopButton" class="secondary" style="display:none">⏹ Parar</button>
-            <button id="torchButton" class="secondary" style="display:none">🔦 Flash</button>
+function saveScans() {
+    localStorage.setItem("pegazus_scans", JSON.stringify(scans));
+}
 
-            <select id="deviceSelect" style="display:none"></select>
-
-            <button id="exportBtn" class="secondary" style="display:none">⬇ Exportar CSV</button>
-            <button id="clearBtn" class="secondary" style="display:none">🧹 Limpar</button>
+function renderScans() {
+    scansList.innerHTML = scans.map(item => `
+        <div class="item">
+            <div><strong>${escapeHtml(item.code)}</strong></div>
+            <div class="meta">${item.date}</div>
         </div>
+    `).join("");
+}
 
-        <div class="camera-wrap">
-            <video id="videoElement" autoplay muted playsinline></video>
-            <canvas id="overlay"></canvas>
-        </div>
+function registerScan(data) {
+    const timestamp = new Date().toLocaleString();
 
-        <div class="panel">
-            <div id="output"></div>
-            <div id="scansList" class="list"></div>
-        </div>
+    scans.unshift({ code: data, date: timestamp });
 
-    </div>
+    saveScans();
+    renderScans();
 
-    <div id="scanPopup"></div>
+    document.getElementById("output").textContent = "Último: " + data;
+}
 
-    <script src="app.js"></script>
 
-</body>
-</html>
+// =========================================================
+// FERRAMENTAS
+// =========================================================
+
+function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function beep() {
+    const audio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=");
+    audio.play();
+}
+
+
+// =========================================================
+// BOTÕES
+// =========================================================
+
+document.getElementById("startButton").onclick = startScanner;
+document.getElementById("stopButton").onclick = stopScanner;
+
+document.getElementById("clearBtn").onclick = () => {
+    if (confirm("Limpar todos os registros?")) {
+        scans = [];
+        saveScans();
+        renderScans();
+    }
+};
+
+document.getElementById("exportBtn").onclick = () => {
+    let csv = "codigo,data\n" +
+        scans.map(i => `${i.code},${i.date}`).join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "registros.csv";
+    a.click();
+};
+
+
+// Render inicial
+renderScans();
