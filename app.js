@@ -1,4 +1,4 @@
-<!-- LÓGICA JAVASCRIPT CORRIGIDA -->
+    <!-- LÓGICA JAVASCRIPT CORRIGIDA -->
     <script>
         // Função para simular o login
         function handleLogin(event) {
