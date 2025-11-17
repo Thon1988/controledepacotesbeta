@@ -1,76 +1,301 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📦 Scanner 8000 v0.1</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>📦 Scanner 8000 v0.2</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
-  <style>
-    :root{--bg:#111;--card:#fff;--accent:#00b4d8;--muted:#9aa0a6}
-    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:#fff}
-    .app{max-width:920px;margin:12px auto;padding:12px}
-    h1{margin:0 0 8px;font-size:18px;color:#fff}
-    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
-    button{background:var(--accent);color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
-    button.secondary{background:#6c757d}
-    .camera-wrap{position:relative;max-width:920px;margin:0 auto;border-radius:12px;overflow:hidden;background:#000;height:60vh;display:flex;align-items:center;justify-content:center}
-    video#videoElement{width:100%;height:100%;object-fit:cover;display:block;background:#000}
-    canvas#overlay{position:absolute;left:0;top:0;pointer-events:none;width:100%;height:100%}
-    .panel{background:var(--card);padding:10px;border-radius:8px;margin-top:12px;box-shadow:0 1px 6px rgba(0,0,0,.4);color:#111}
-    #output{min-height:36px;display:flex;align-items:center;gap:8px;color:var(--muted);padding:4px}
-    .list{max-height:180px;overflow:auto;margin-top:8px;border-radius:6px;border:1px solid #eee;padding:8px}
-    .item{padding:8px;border-bottom:1px solid #eee;display:flex;flex-direction:column;gap:6px}
-    .meta{font-size:12px;color:#666}
-    .badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eee;font-size:12px;color:#111}
-    .select-device{background:#fff;color:#111;border-radius:8px;padding:6px}
-    .select-label { color: #fff; font-size: 14px; margin-left: 6px; }
-    #scanPopup{position:fixed;right:16px;bottom:16px;background:#222;color:#fff;padding:10px 14px;border-radius:8px;display:none;z-index:9999}
-    .link-text{
-      font-size:14px;
-      white-space:nowrap;
-      overflow-x:auto;
-      -webkit-overflow-scrolling: touch;
-      word-break: normal;
-      max-width:100%;
-      color:#111;
-      background:#f8f9fa;
-      padding:4px 6px;
-      border-radius:6px;
-    }
-    @media (max-width:520px){ .controls{flex-direction:column;align-items:stretch} .camera-wrap{height:50vh} }
-  </style>
+    <style>
+
+        /* ---------------------------------------------------------
+           PALETA MODERNA
+        ---------------------------------------------------------- */
+        :root {
+            --primary: #0ea5e9;
+            --primary-dark: #0284c7;
+            --bg: #f5f7fa;
+            --text: #1e293b;
+            --panel-bg: #ffffff;
+            --border: #e2e8f0;
+            --radius: 14px;
+            --shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        body {
+            margin: 0;
+            font-family: "Inter", system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* ---------------------------------------------------------
+           LOGIN — CARD MODERNO
+        ---------------------------------------------------------- */
+        #loginScreen {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #loginForm {
+            background: var(--panel-bg);
+            padding: 40px 30px;
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 380px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+
+        #loginForm h2 {
+            margin: 0 0 10px;
+            font-weight: 600;
+        }
+
+        #loginForm input {
+            padding: 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 15px;
+            transition: 0.2s;
+        }
+        #loginForm input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.25);
+        }
+
+        #loginForm button {
+            padding: 14px;
+            background: var(--primary);
+            border: none;
+            color: white;
+            border-radius: var(--radius);
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+        }
+        #loginForm button:hover {
+            background: var(--primary-dark);
+        }
+
+        .login-status-message {
+            font-size: 13px;
+            color: #6b7280;
+            min-height: 16px;
+        }
+
+
+        /* ---------------------------------------------------------
+           APP PRINCIPAL
+        ---------------------------------------------------------- */
+        .app {
+            display: none;
+            padding: 20px;
+            max-width: 960px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        /* ---------------------------------------------------------
+           CONTROLS — botões minimalistas
+        ---------------------------------------------------------- */
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 10px 14px;
+            background: var(--primary);
+            border: none;
+            color: white;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+        }
+
+        button.secondary {
+            background: #64748b;
+        }
+
+        button.secondary:hover {
+            background: #475569;
+        }
+
+        select, input[type="date"] {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background: white;
+        }
+
+        /* ---------------------------------------------------------
+           CAMERA — estilo app scanner profissional
+        ---------------------------------------------------------- */
+        .camera-wrap {
+            position: relative;
+            background: black;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            height: 58vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        video#videoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        canvas#overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* ---------------------------------------------------------
+           PAINEL
+        ---------------------------------------------------------- */
+        .panel {
+            background: var(--panel-bg);
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        #output {
+            color: #64748b;
+            min-height: 30px;
+            font-size: 14px;
+        }
+
+        .list {
+            max-height: 220px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .item {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            color: #334155;
+        }
+
+        /* ---------------------------------------------------------
+           POPUP — notificação moderna
+        ---------------------------------------------------------- */
+        #scanPopup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            font-size: 15px;
+            display: none;
+            box-shadow: var(--shadow);
+        }
+
+        /* ---------------------------------------------------------
+           LOGIN ATIVO
+        ---------------------------------------------------------- */
+        body.logged-in .app {
+            display: block;
+        }
+
+        body.logged-in #loginScreen {
+            display: none;
+        }
+
+        /* ---------------------------------------------------------
+           RESPONSIVIDADE
+        ---------------------------------------------------------- */
+        @media (max-width: 600px) {
+            .camera-wrap {
+                height: 48vh;
+            }
+            h1 {
+                font-size: 18px;
+            }
+        }
+
+    </style>
 </head>
+
 <body>
-  <div class="app">
-    <h1>📦 Scanner 8000 v0.1</h1>
 
-    <div class="controls" id="controls">
-      <!-- Botão "Iniciar" removido temporariamente conforme solicitado -->
-      <button id="stopButton" class="secondary" style="display:none" aria-label="Parar câmera">⏹️ Parar</button>
-      <button id="torchButton" class="secondary" style="display:none" aria-label="Ligar flash">🔦 Flash</button>
-
-      <label for="deviceSelect" class="select-label" style="display:none" id="deviceSelectLabel">Câmera:</label>
-      <select id="deviceSelect" class="select-device" style="display:none" aria-labelledby="deviceSelectLabel"></select>
-
-      <button id="exportBtn" class="secondary" aria-label="Exportar CSV">⬇️ Exportar CSV</button>
-      <button id="clearBtn" class="secondary" aria-label="Limpar registros">🧹 Limpar</button>
+    <!-- LOGIN -->
+    <div id="loginScreen">
+        <form id="loginForm">
+            <h2>🔑 Acesso do Scanner</h2>
+            <input id="loginUser" type="text" placeholder="Usuário">
+            <input id="loginPass" type="password" placeholder="Senha">
+            <button id="loginBtn">Entrar</button>
+            <p id="loginStatus" class="login-status-message">Digite suas credenciais.</p>
+        </form>
     </div>
 
-    <div class="camera-wrap" id="cameraWrap">
-      <video id="videoElement" muted playsinline autoplay></video>
-      <canvas id="overlay"></canvas>
+    <!-- APP -->
+    <div class="app">
+
+        <h1>📦 Scanner 8000 v0.2</h1>
+
+        <div class="controls">
+            <button id="startButton" style="display:none">▶ Iniciar</button>
+            <button id="stopButton" class="secondary" style="display:none">⏹ Parar</button>
+            <button id="torchButton" class="secondary" style="display:none">🔦 Flash</button>
+
+            <select id="deviceSelect" style="display:none"></select>
+
+            <button id="exportBtn" class="secondary" style="display:none">⬇ Exportar CSV</button>
+            <button id="clearBtn" class="secondary" style="display:none">🧹 Limpar</button>
+        </div>
+
+        <div class="camera-wrap">
+            <video id="videoElement" autoplay muted playsinline></video>
+            <canvas id="overlay"></canvas>
+        </div>
+
+        <div class="panel">
+            <div id="output"></div>
+            <div id="scansList" class="list"></div>
+        </div>
+
     </div>
 
-    <div class="panel">
-      <div id="output">Pronto. (Botão iniciar removido temporariamente.)</div>
-      <div class="list" id="scansList" aria-live="polite"></div>
-    </div>
-  </div>
+    <div id="scanPopup"></div>
 
-  <div id="scanPopup" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
 
-  <script src="app.js"></script>
 </body>
 </html>
