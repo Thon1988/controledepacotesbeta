@@ -35,8 +35,8 @@
             <p class="text-sm text-gray-500 mt-1">Acesse sua área de digitalização</p>
         </div>
 
-        <!-- Formulário de Login -->
-        <form id="login-form" onsubmit="handleLogin(event)" class="space-y-6">
+        <!-- Formulário de Login (MÉTODO POST CORRIGIDO) -->
+        <form id="login-form" onsubmit="handleLogin(event)" method="POST" class="space-y-6">
             
             <!-- Campo Email/Usuário -->
             <div>
@@ -70,7 +70,6 @@
             <a href="#" onclick="showForgotPassword(event)" class="font-medium text-indigo-600 hover:text-indigo-500">
                 Esqueceu a senha?
             </a>
-            <!-- A opção "Criar uma conta" foi removida conforme sua solicitação. -->
         </div>
     </div>
 
