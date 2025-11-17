@@ -1,11 +1,12 @@
-<!-- LÓGICA JAVASCRIPT SIMULADA -->
-<script>
+<!-- LÓGICA JAVASCRIPT CORRIGIDA -->
+    <script>
         // Função para simular o login
         function handleLogin(event) {
             event.preventDefault(); // Impede o envio padrão do formulário
             
-            const emailInput = document.getElementById('email').value;
-            const passwordInput = document.getElementById('password').value;
+            // CORREÇÃO: Usando .trim() para garantir que não haja espaços acidentais
+            const emailInput = document.getElementById('email').value.trim();
+            const passwordInput = document.getElementById('password').value.trim();
             const statusMessage = document.getElementById('status-message');
             const loginButton = document.getElementById('login-button');
 
@@ -26,13 +27,12 @@
                 loginButton.textContent = 'Entrar';
                 loginButton.classList.remove('opacity-70');
 
-                // *** Lógica de Autenticação Simulada ***
-                // O login é efetuado com sucesso se as credenciais forem "teste" / "123"
+                // Lógica de Autenticação Simulada. Use 'teste' e '123' para login bem-sucedido.
                 if (emailInput === 'teste' && passwordInput === '123') {
                     statusMessage.textContent = 'Login bem-sucedido! Acesso liberado para digitalização.';
                     statusMessage.classList.add('text-green-600');
-                    // Aqui você integraria a lógica real de redirecionamento ou inicialização do app (Firestore/QR Code)
                     console.log("Login OK. Próximo passo: Inicializar Firebase e Scanner.");
+                    // Neste ponto, você faria o redirecionamento para a tela principal (QR Code Scanner)
                 } else {
                     statusMessage.textContent = 'Credenciais inválidas. Verifique seu usuário/email e senha.';
                     statusMessage.classList.add('text-red-600');
@@ -74,10 +74,8 @@
                 recoveryStatus.classList.remove('text-gray-500');
                 recoveryStatus.classList.add('text-green-600');
                 document.getElementById('recovery-input').value = '';
-                // Em um app real, o próximo passo seria a tela de inserção do código.
             }, 2000);
         }
     </script>
 </body>
 </html>
-
