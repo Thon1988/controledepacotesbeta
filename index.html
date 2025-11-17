@@ -35,8 +35,8 @@
             <p class="text-sm text-gray-500 mt-1">Acesse sua área de digitalização</p>
         </div>
 
-        <!-- Formulário de Login (MÉTODO POST REMOVIDO PARA EVITAR O ERRO 405) -->
-        <form id="login-form" onsubmit="handleLogin(event)" class="space-y-6">
+        <!-- Formulário de Login (Sem método para forçar a intercepção pelo JS) -->
+        <form id="login-form" onsubmit="handleLogin(event)" action="#" class="space-y-6">
             
             <!-- Campo Email/Usuário -->
             <div>
