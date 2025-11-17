@@ -1,10 +1,13 @@
-    <!-- LÓGICA JAVASCRIPT CORRIGIDA -->
+
+    <!-- LÓGICA JAVASCRIPT CORRIGIDA E COM REDIRECIONAMENTO -->
     <script>
+        // Nome do arquivo da câmera para redirecionamento
+        const CAMERA_FILE = 'camera_scanner_8000.html'; 
+
         // Função para simular o login
         function handleLogin(event) {
             event.preventDefault(); // Impede o envio padrão do formulário
             
-            // CORREÇÃO: Usando .trim() para garantir que não haja espaços acidentais
             const emailInput = document.getElementById('email').value.trim();
             const passwordInput = document.getElementById('password').value.trim();
             const statusMessage = document.getElementById('status-message');
@@ -19,8 +22,6 @@
             loginButton.textContent = 'Acessando...';
             loginButton.classList.add('opacity-70');
 
-            console.log(`Tentativa de Login: Usuário=${emailInput}, Senha=${passwordInput}`);
-
             // Simulação de delay de rede
             setTimeout(() => {
                 loginButton.disabled = false;
@@ -29,14 +30,17 @@
 
                 // Lógica de Autenticação Simulada. Use 'teste' e '123' para login bem-sucedido.
                 if (emailInput === 'teste' && passwordInput === '123') {
-                    statusMessage.textContent = 'Login bem-sucedido! Acesso liberado para digitalização.';
+                    statusMessage.textContent = 'Login bem-sucedido! Redirecionando...';
                     statusMessage.classList.add('text-green-600');
-                    console.log("Login OK. Próximo passo: Inicializar Firebase e Scanner.");
-                    // Neste ponto, você faria o redirecionamento para a tela principal (QR Code Scanner)
+                    
+                    // CORREÇÃO CRÍTICA: Redirecionamento forçado após o login simulado
+                    setTimeout(() => {
+                        window.location.href = CAMERA_FILE;
+                    }, 500); // Pequeno delay para o usuário ver a mensagem de sucesso
+                    
                 } else {
                     statusMessage.textContent = 'Credenciais inválidas. Verifique seu usuário/email e senha.';
                     statusMessage.classList.add('text-red-600');
-                    console.error("Login Falhou. Credenciais incorretas ou usuário não autorizado.");
                 }
             }, 1500); // 1.5 segundos de simulação
         }
@@ -79,3 +83,4 @@
     </script>
 </body>
 </html>
+
